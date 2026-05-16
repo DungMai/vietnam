@@ -123,6 +123,6 @@ By contributing you agree your contribution is licensed under MIT (sign your com
 
 ## 🙏 Credits
 
-Started by [Dung Mai](https://github.com/DungMai) (New Era Inc, 2026). Built with the Studio process — specs, design, and decisions live separately; what you see here is the working product distilled.
+Started by [Dung Mai](https://github.com/DungMai) as a personal open-source project. Built with the Studio process — specs, design, and decisions live separately; what you see here is the working product distilled.
 
 Fixers, translators, persona voice contributors, and code authors are credited in releases and on the homepage. Everyone who's verified a fact is part of the product.
