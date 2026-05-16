@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { supabaseServer } from '@/lib/supabase/server';
 import { resolveLocale, pickLocale } from '@/lib/i18n/locale';
+import { ChatSurface } from '@/components/ChatSurface';
 import type { Locale } from '@/types/domain';
 
 type Params = Promise<{ slug: string }>;
@@ -30,18 +31,20 @@ export default async function ChatPage({
     locale,
   );
 
-  // TODO Stage 4: replace this stub with a client component wired to
-  //   /api/chat SSE stream (see 02-SPECS/trust-citation-rendering.md §SSE).
   return (
     <div className="space-y-4">
-      <h1 className="font-serif text-h2">
-        {locale === 'vi' ? `Chat với ${personaName}` : `Chat with ${personaName}`}
-      </h1>
-      <div className="rounded-lg border border-ink-secondary/10 bg-surface-raised p-6 text-body-sm text-ink-secondary">
-        {locale === 'vi'
-          ? 'Khung chat sẽ được nối với /api/chat (SSE streaming) trong giai đoạn build.'
-          : 'Chat surface will wire to /api/chat (SSE streaming) at build phase.'}
-      </div>
+      <header className="flex items-center gap-3">
+        <div className="h-6 w-1 rounded-pill" style={{ background: p.accent_color }} aria-hidden />
+        <h1 className="font-serif text-h2">
+          {locale === 'vi' ? `Chat với ${personaName}` : `Chat with ${personaName}`}
+        </h1>
+      </header>
+      <ChatSurface
+        provinceSlug={p.slug}
+        personaName={personaName}
+        accentColor={p.accent_color}
+        locale={locale}
+      />
     </div>
   );
 }

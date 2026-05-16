@@ -47,7 +47,11 @@ supabase start
 pnpm db:migrate
 pnpm db:seed
 
-# 4. Dev
+# 4. Ingest seeded facts into pgvector corpus
+#    Needs GOOGLE_GENERATIVE_AI_API_KEY in .env.local
+pnpm rag:ingest
+
+# 5. Dev
 pnpm dev
 # → http://localhost:3000
 ```
@@ -79,14 +83,35 @@ supabase/
 types/domain.ts         Shared TS types matching SQL schemas
 ```
 
-## What's NOT in this scaffold (refine yourself)
+## What IS wired (Stage 4 pass — 2026-05-16)
 
-- Production LLM routing logic (stubs return placeholder text)
-- Real RAG retrieval (pgvector queries are scaffolded but unwired)
-- Fixer admin UI (Supabase Studio is fine for Phase 1)
-- TikTok share-card image pipeline beyond the route stub
-- Auth-attached anonymous sessions beyond the cookie skeleton
+- ✅ 3-tier LLM router (Gemini Flash-Lite / Sonnet 4.5 / Haiku 4.5) with kill-switch modes
+- ✅ pgvector RAG retrieval via `match_corpus_chunk` RPC, province + lang filtered
+- ✅ Gemini embeddings (1536-dim) for ingestion + query
+- ✅ Anonymous session cookie (HMAC-signed) with 20-msg/day rolling cap
+- ✅ Atomic rate-limit counter via `increment_session_msg` RPC
+- ✅ Streaming chat endpoint with SSE token/citation/done events
+- ✅ Per-province persona system prompts (10 personas, EN+VI)
+- ✅ Inline `[^factId]` → CitationPill rendering on the client
+- ✅ Citation modal with stale-flag + report-outdated CTA
+- ✅ LLM cost logged to `llm_call_log` for daily rollup
+- ✅ Ingestion CLI: `pnpm rag:ingest`
+
+## What's NOT yet wired
+
+- Magic-link email send (Resend API call inside `app/api/magic-link/route.ts` — schema exists, send call is TODO)
+- Community report AI pre-screen (inserts to `community_report`, no AI screen yet)
+- Asset pipeline (no-AI-imagery enforcement at upload — schema noted, no upload route yet)
+- Stale fact demotion job (cron / supabase scheduled)
+- Sentry hooks for cost alarms
+- Admin / fixer dashboard (use Supabase Studio for Phase 1)
 - Tests — Stage 5 (Harden) adds qa-engineer's test plan
+
+## Likely small fixes you'll hit on first run
+
+- AI SDK v4 model option shape may differ from what providers expect (Gemini embedding `providerOptions.google` keys). Adjust per current `@ai-sdk/google` docs if `embedMany` throws.
+- Supabase nested select syntax for `fixer_signature(fixer:fixer(...))` may need a junction view. If the citation lookup in `/api/chat` returns empty `fixer`, drop the join and fetch fixer separately.
+- `gemini-2.5-flash-lite` model ID — if Google bumps the version, update `MODEL.tier1Chat` in `lib/llm/providers.ts`.
 
 ## Locked decisions you cannot regress without re-running specs
 

@@ -1,3 +1,5 @@
+import { generateText, streamText, type LanguageModel } from 'ai';
+import { google, anthropic, MODEL } from './providers';
 import type { LlmTier } from '@/types/domain';
 
 /**
@@ -6,13 +8,15 @@ import type { LlmTier } from '@/types/domain';
  *  + 03-DECISIONS/0003-llm-cost-monitoring.md §kill-switch.
  *
  * Tier 1 — Gemini Flash-Lite. Default for almost everything.
- * Tier 2 — Sonnet 4.5. Escalated only when confidence threshold not met.
+ * Tier 2 — Sonnet 4.5. Escalated only when retrieval confidence < 0.55.
  * Tier 3 — Haiku 4.5 for translation. Cheapest, narrow purpose.
  */
+export type KillSwitchMode = 'normal' | 'cheap-only' | 'translate-only' | 'kill';
+
 export interface RouterInput {
   promptType: 'chat' | 'translation' | 'classification';
   retrievalConfidence?: number;
-  killSwitchMode?: 'normal' | 'cheap-only' | 'translate-only' | 'kill';
+  killSwitchMode?: KillSwitchMode;
 }
 
 export const pickTier = ({
@@ -27,20 +31,45 @@ export const pickTier = ({
   if (promptType === 'translation') return 3;
   if (promptType === 'classification') return 1;
 
-  // chat — escalate to Tier 2 only when retrieval confidence is low
   if (typeof retrievalConfidence === 'number' && retrievalConfidence < 0.55) {
     return 2;
   }
   return 1;
 };
 
-// Stubs — replace with actual SDK calls in build phase.
-export const callTier1 = async (_prompt: string): Promise<string> => {
-  return 'TODO: wire @ai-sdk/google + gemini-2.5-flash-lite';
+export const modelForTier = (tier: LlmTier): LanguageModel => {
+  switch (tier) {
+    case 1:
+      return google(MODEL.tier1Chat);
+    case 2:
+      return anthropic(MODEL.tier2Chat);
+    case 3:
+      return anthropic(MODEL.tier3Translate);
+  }
 };
-export const callTier2 = async (_prompt: string): Promise<string> => {
-  return 'TODO: wire @ai-sdk/anthropic + claude-sonnet-4-6';
-};
-export const callTier3 = async (_prompt: string): Promise<string> => {
-  return 'TODO: wire @ai-sdk/anthropic + claude-haiku-4-5';
-};
+
+/**
+ * Streaming chat — used by /api/chat. Caller handles SSE serialization.
+ */
+export const streamChat = (args: {
+  tier: LlmTier;
+  system: string;
+  prompt: string;
+  temperature?: number;
+}) =>
+  streamText({
+    model: modelForTier(args.tier),
+    system: args.system,
+    prompt: args.prompt,
+    temperature: args.temperature ?? 0.4,
+  });
+
+/**
+ * One-shot generation — used by classification, translation, AI pre-screen.
+ */
+export const generateOnce = (args: { tier: LlmTier; system?: string; prompt: string }) =>
+  generateText({
+    model: modelForTier(args.tier),
+    system: args.system,
+    prompt: args.prompt,
+  });
