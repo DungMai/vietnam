@@ -14,7 +14,8 @@
     "db:seed": "psql $DATABASE_URL -f supabase/seed.sql",
     "rag:ingest": "tsx scripts/ingest-corpus.ts",
     "ci:scan-assets": "tsx scripts/scan-assets-ci.ts",
-    "db:demote-stale": "tsx scripts/demote-stale-facts.ts"
+    "db:demote-stale": "tsx scripts/demote-stale-facts.ts",
+    "cost:check": "tsx scripts/check-cost-alarms.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.0",
