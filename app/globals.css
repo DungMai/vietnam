@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --line-height-vi-heading-bump: 1.05;
+  }
+
+  html {
+    font-family: 'Inter', 'Be Vietnam Pro', system-ui, sans-serif;
+    background: theme(colors.surface.base);
+    color: theme(colors.ink.primary);
+  }
+
+  /* +5% line-height for VN diacritic-heavy headings (art-direction.md §2A) */
+  html[lang='vi'] h1,
+  html[lang='vi'] h2,
+  html[lang='vi'] h3 {
+    line-height: calc(1.2 * var(--line-height-vi-heading-bump));
+  }
+
+  /* prevent diacritic clash with descenders */
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: theme(colors.brand.primary);
+    color: theme(colors.surface.base);
+  }
+}
+
+@layer components {
+  .verified-pill {
+    @apply inline-flex items-center gap-1 rounded-pill border border-trust-verified px-2 py-0.5 text-caption text-trust-verified;
+  }
+  .quality-chip {
+    @apply inline-flex items-center gap-1 rounded-pill bg-surface-raised px-2.5 py-1 text-caption font-medium shadow-raised;
+  }
+}
