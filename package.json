@@ -13,7 +13,8 @@
     "db:reset": "supabase db reset",
     "db:seed": "psql $DATABASE_URL -f supabase/seed.sql",
     "rag:ingest": "tsx scripts/ingest-corpus.ts",
-    "ci:scan-assets": "tsx scripts/scan-assets-ci.ts"
+    "ci:scan-assets": "tsx scripts/scan-assets-ci.ts",
+    "db:demote-stale": "tsx scripts/demote-stale-facts.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.0",
