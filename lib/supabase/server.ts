@@ -1,5 +1,11 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+
+interface CookieUpdate {
+  name: string;
+  value: string;
+  options?: CookieOptions;
+}
 
 export const supabaseServer = async () => {
   const cookieStore = await cookies();
@@ -9,7 +15,7 @@ export const supabaseServer = async () => {
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
-        setAll: (updates) => {
+        setAll: (updates: CookieUpdate[]) => {
           updates.forEach(({ name, value, options }) => {
             cookieStore.set(name, value, options);
           });

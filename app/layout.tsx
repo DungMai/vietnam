@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { resolveLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale';
+import { Suspense } from 'react';
+import Link from 'next/link';
+import { DEFAULT_LOCALE } from '@/lib/i18n/locale';
 import { BilingualToggle } from '@/components/BilingualToggle';
 import './globals.css';
 
@@ -30,10 +32,12 @@ export default async function RootLayout({
       <body className="min-h-screen bg-surface-base text-ink-primary">
         <header className="sticky top-0 z-20 border-b border-ink-secondary/10 bg-surface-base/95 backdrop-blur">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <a href="/" className="font-serif text-h3 tracking-tight">
+            <Link href="/" className="font-serif text-h3 tracking-tight">
               vietnam
-            </a>
-            <BilingualToggle />
+            </Link>
+            <Suspense fallback={null}>
+              <BilingualToggle />
+            </Suspense>
           </div>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
