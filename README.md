@@ -1,125 +1,128 @@
-# vietnam — scaffold
+# vietnam
 
-10 AI agents, one per Tier-1 Vietnamese province. Bilingual EN/VI. Fixer-verified anti-scam content. Mission-led, $500/mo budget.
+> Ten AI agents. One per Tier-1 Vietnamese province. Fixer-verified, scam-aware, bilingual EN/VI.
+>
+> *Mười AI. Mỗi tỉnh một con. Có fixer địa phương xác minh, cảnh báo lừa đảo, song ngữ Anh–Việt.*
 
-This is a **scaffolded skeleton** generated from the Studio specs in `../02-SPECS/` and `../03-DECISIONS/`. It boots, migrations apply cleanly, and the home + flagship-province routes render. Business logic stubs return `TODO`. Build from here.
+**Open source · MIT · community-built**
+[github.com/DungMai/vietnam](https://github.com/DungMai/vietnam)
 
 ---
 
-## Stack
+## 🌏 What this is *(EN)*
 
-- **Runtime**: Next.js 15 (App Router, RSC, streaming)
-- **DB**: Supabase Postgres + pgvector (unified vector index, province metadata filter)
-- **LLM**: Vercel AI SDK with 3-tier routing — Gemini Flash-Lite default, Sonnet 4.5 swing, Haiku for translation
-- **Hosting**: Vercel (Edge for OG cards + streaming chat)
-- **Email**: Resend (15-min magic links)
-- **Assets**: Cloudflare R2 (fixer-sourced photos only — see no-AI-imagery enforcement)
-- **i18n**: parallel `*_en` / `*_vi` columns with NOT NULL CHECK constraints (single bilingual SKU)
+A chat-first product where each Tier-1 Vietnamese administrative unit has **its own AI persona** with its own voice, cultural knowledge, and locally-verified facts. Built to help three audiences:
 
-## Spec map
+1. **Travelers** — Don't get scammed. Get real local prices, real verified venues, real warnings. The wedge: generic AI (Perplexity, ChatGPT, Google AI Overviews) hallucinates closed restaurants and outdated routes for Vietnam. We don't.
+2. **Culture learners** — Whether you're VN diaspora, a curious foreigner, or a Vietnamese student — chat with a province like chatting with a knowledgeable friend from there.
+3. **Foreign business explorers** *(later phase)* — Understand a Vietnamese province as a market and partner.
 
-| Implementation area | Source-of-truth spec |
+**Locked invariants** (these are the product — do not regress):
+
+- ✅ Every fact is **fixer-verified** (local human review, monthly rotation cadence)
+- ✅ When we don't have a verified answer, we **say so** — no guessing
+- ✅ **No AI-generated imagery, ever** — photos come from fixers and partnered VN photographers
+- ✅ **Bilingual completeness** at SQL level (every `*_en` / `*_vi` pair NOT NULL CHECK)
+- ✅ Personas speak as **"Sài Gòn", "Hà Nội"** — not administrative codes
+
+---
+
+## 🌏 Đây là gì *(VI)*
+
+Sản phẩm chat-first nơi mỗi đơn vị hành chính cấp tỉnh ở VN (10 tỉnh Tier-1, theo cấu trúc sau cải cách 2025) có **một AI persona riêng** — giọng nói riêng, hiểu biết văn hoá riêng, dữ liệu địa phương đã được xác minh. Phục vụ 3 nhóm người dùng:
+
+1. **Du khách** — Đừng bị lừa. Lấy giá địa phương thực, quán đã xác minh, cảnh báo lừa đảo cập nhật. Điểm khác biệt: AI chung chung (Perplexity, ChatGPT, Google AI Overviews) trả lời sai lệch về VN — quán đã đóng cửa, tuyến đường lỗi thời. Chúng tôi thì không.
+2. **Người tìm hiểu văn hoá** — Việt kiều, người nước ngoài, học sinh sinh viên VN — chat với một tỉnh như chat với người bạn am hiểu của vùng đó.
+3. **Người nước ngoài đánh giá cơ hội kinh doanh** *(giai đoạn sau)* — Hiểu một tỉnh VN như một thị trường / đối tác.
+
+**Bất biến đã chốt** (đây CHÍNH LÀ sản phẩm — không PR nào được phá):
+
+- ✅ Mỗi dữ kiện đều có **fixer xác minh** (người địa phương review, lịch xoay vòng hàng tháng)
+- ✅ Không có dữ kiện xác minh thì **nói thẳng** — không đoán
+- ✅ **Không bao giờ dùng ảnh AI tạo** — ảnh từ fixer và nhiếp ảnh gia VN đối tác
+- ✅ **Song ngữ đầy đủ** ở mức SQL (mọi cặp `*_en` / `*_vi` đều NOT NULL CHECK)
+- ✅ Persona xưng **"Sài Gòn", "Hà Nội"** — không phải mã hành chính
+
+---
+
+## 🤝 Who can contribute
+
+**Anyone.** Especially welcoming Vietnamese developers — most discussion happens bilingually. You don't need to know Vietnamese to contribute to code. You don't need to know TypeScript to contribute facts, persona voice tweaks, or translations.
+
+| You can help with | Where to start |
 |---|---|
-| Tech stack rationale | `../03-DECISIONS/0001-tech-stack.md` |
-| RAG + persona | `../03-DECISIONS/0002-rag-and-persona-architecture.md` |
-| Cost monitoring | `../03-DECISIONS/0003-llm-cost-monitoring.md` |
-| Anti-scam loop | `../02-SPECS/anti-scam-loop.md` |
-| Content + fixer | `../02-SPECS/content-corpora-and-fixer.md` |
-| Rate-limit + email gate | `../02-SPECS/anonymous-rate-limit-and-email-gate.md` |
-| Bilingual content | `../02-SPECS/bilingual-content-and-rendering.md` |
-| Trust citation rendering | `../02-SPECS/trust-citation-rendering.md` |
-| TikTok share cards | `../02-SPECS/tiktok-share-cards.md` |
+| Code (TS / Next.js / Postgres) | [`CONTRIBUTING.md`](CONTRIBUTING.md) → "First code PR" |
+| Fact corrections (you know a province well) | [Open a fact-correction issue](https://github.com/DungMai/vietnam/issues/new?template=fact_correction.yml) |
+| Persona voice refinement (you're from that province) | [`docs/PERSONAS.md`](docs/PERSONAS.md) → open a PR |
+| Vietnamese translation review | [`CONTRIBUTING.md`](CONTRIBUTING.md) → "Translation review" |
+| New scam pattern report | [Open a scam-report issue](https://github.com/DungMai/vietnam/issues/new?template=scam_report.yml) |
+| Fixer interest (paid, monthly trip) | Email `dung@newera.inc` |
 
 ---
 
-## Get it running
+## 🚀 Get it running locally
 
 ```bash
-# 1. Install deps
+git clone git@github.com:DungMai/vietnam.git
+cd vietnam
 pnpm install
 
-# 2. Local Supabase
-brew install supabase/tap/supabase
+# Local Supabase (Postgres + pgvector)
+brew install supabase/tap/supabase   # if needed
 supabase start
-# Copy keys output by `supabase start` into .env.local (see .env.example for shape)
+# copy keys into .env.local — see .env.example
 
-# 3. Migrations + seed
 pnpm db:migrate
 pnpm db:seed
-
-# 4. Ingest seeded facts into pgvector corpus
-#    Needs GOOGLE_GENERATIVE_AI_API_KEY in .env.local
-pnpm rag:ingest
-
-# 5. Dev
-pnpm dev
-# → http://localhost:3000
+pnpm rag:ingest                       # needs GOOGLE_GENERATIVE_AI_API_KEY
+pnpm dev                              # → http://localhost:3000
 ```
 
-## Project layout
-
-```
-app/
-  layout.tsx            Root layout, bilingual locale provider
-  page.tsx              Discovery feed (10 province cards)
-  province/[slug]/
-    page.tsx            Province landing (hero + tonight panel + scam-watch)
-    chat/page.tsx       Chat with the province agent
-  api/
-    chat/route.ts       SSE streaming chat (see trust-citation-rendering §SSE)
-    citation/route.ts   GET verified-fact payload
-    report/route.ts     POST community scam report
-    magic-link/route.ts POST email gate magic-link issue + GET callback
-    og/route.tsx        @vercel/og share-card generation
-components/              Stubs for design-system §6 inventory
-lib/
-  supabase/             Browser + server clients
-  llm/                  3-tier router + provider adapters
-  i18n/                 ?lang= canonical URL handling
-  trust/                Citation payload assembly
-supabase/
-  migrations/           SQL migrations in spec order
-  seed.sql              HCM (Sài Gòn) flagship + 1 fixer + 5 verified facts
-types/domain.ts         Shared TS types matching SQL schemas
-```
-
-## What IS wired (Stage 4 pass — 2026-05-16)
-
-- ✅ 3-tier LLM router (Gemini Flash-Lite / Sonnet 4.5 / Haiku 4.5) with kill-switch modes
-- ✅ pgvector RAG retrieval via `match_corpus_chunk` RPC, province + lang filtered
-- ✅ Gemini embeddings (1536-dim) for ingestion + query
-- ✅ Anonymous session cookie (HMAC-signed) with 20-msg/day rolling cap
-- ✅ Atomic rate-limit counter via `increment_session_msg` RPC
-- ✅ Streaming chat endpoint with SSE token/citation/done events
-- ✅ Per-province persona system prompts (10 personas, EN+VI)
-- ✅ Inline `[^factId]` → CitationPill rendering on the client
-- ✅ Citation modal with stale-flag + report-outdated CTA
-- ✅ LLM cost logged to `llm_call_log` for daily rollup
-- ✅ Ingestion CLI: `pnpm rag:ingest`
-
-## What's NOT yet wired
-
-- Magic-link email send (Resend API call inside `app/api/magic-link/route.ts` — schema exists, send call is TODO)
-- Community report AI pre-screen (inserts to `community_report`, no AI screen yet)
-- Asset pipeline (no-AI-imagery enforcement at upload — schema noted, no upload route yet)
-- Stale fact demotion job (cron / supabase scheduled)
-- Sentry hooks for cost alarms
-- Admin / fixer dashboard (use Supabase Studio for Phase 1)
-- Tests — Stage 5 (Harden) adds qa-engineer's test plan
-
-## Likely small fixes you'll hit on first run
-
-- AI SDK v4 model option shape may differ from what providers expect (Gemini embedding `providerOptions.google` keys). Adjust per current `@ai-sdk/google` docs if `embedMany` throws.
-- Supabase nested select syntax for `fixer_signature(fixer:fixer(...))` may need a junction view. If the citation lookup in `/api/chat` returns empty `fixer`, drop the join and fetch fixer separately.
-- `gemini-2.5-flash-lite` model ID — if Google bumps the version, update `MODEL.tier1Chat` in `lib/llm/providers.ts`.
-
-## Locked decisions you cannot regress without re-running specs
-
-- **No AI-generated imagery anywhere**, ever. (`STATUS.md` row 18 + `content-corpora-and-fixer.md` §4-checkpoint enforcement.)
-- **"Sài Gòn" for persona voice fields; "TP.HCM" for admin labels.** Never mixed in one sentence. (`STATUS.md` row 19.)
-- **Bilingual completeness enforced at SQL level** via NOT NULL CHECK on every `*_en` / `*_vi` pair.
-- **Cache-hit rate ≥ 70%** is load-bearing for the $500/mo budget. (`0003-llm-cost-monitoring.md`.)
+Try chatting with Saigon: <http://localhost:3000/province/hcm/chat>
 
 ---
 
-Built from Studio specs by CPO scaffold pass, 2026-05-16.
+## 🧱 Stack
+
+**Next.js 15** (App Router, RSC, streaming) · **Supabase** (Postgres + pgvector) · **Vercel** · **Cloudflare R2** · **Vercel AI SDK** (Gemini Flash-Lite default, Sonnet 4.5 escalation, Haiku 4.5 translation) · **Resend** (email gate) · **Tailwind**
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the 3-tier LLM router, RAG retrieval, and trust-loop design.
+
+---
+
+## 📁 Repo map
+
+```
+app/              Next.js App Router (pages + API routes)
+components/       UI components (chat surface, citation pill, etc.)
+lib/              llm, rag, persona, session, trust, i18n
+supabase/         migrations + seed
+scripts/          ingest CLI + ops
+types/            shared TS domain types
+docs/             public documentation for contributors
+.github/          CI, PR template, issue templates
+```
+
+---
+
+## 🛡 Trust & safety
+
+- Report a security issue: see [`SECURITY.md`](SECURITY.md). **Do not** open a public issue for vulnerabilities.
+- Conduct: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) — Contributor Covenant 2.1. Vietnamese context matters; be respectful of regional history (Huế royal heritage, Hải Phòng war heritage, An Giang post-2025 merger).
+- How decisions are made: [`GOVERNANCE.md`](GOVERNANCE.md).
+
+---
+
+## 📜 License
+
+**MIT.** See [`LICENSE`](LICENSE). The OSS core is and will remain MIT. Future paid features (if any) will be built as separate proprietary extensions on top of this MIT core — the public source stays public.
+
+By contributing you agree your contribution is licensed under MIT (sign your commits with `git commit -s` to confirm — see DCO note in [`CONTRIBUTING.md`](CONTRIBUTING.md)).
+
+---
+
+## 🙏 Credits
+
+Started by [Dung Mai](https://github.com/DungMai) (New Era Inc, 2026). Built with the Studio process — specs, design, and decisions live separately; what you see here is the working product distilled.
+
+Fixers, translators, persona voice contributors, and code authors are credited in releases and on the homepage. Everyone who's verified a fact is part of the product.

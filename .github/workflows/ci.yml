@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: lint + typecheck + build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+        env:
+          # build needs these env vars to be defined; values do not need to be real for build
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
+          GOOGLE_GENERATIVE_AI_API_KEY: dummy
+          ANTHROPIC_API_KEY: dummy
+
+  dco:
+    name: DCO sign-off check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify all commits are signed off
+        run: |
+          set -e
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+          MISSING=$(git log --invert-grep --grep "Signed-off-by:" --pretty=format:"%H %s" "$BASE..$HEAD" || true)
+          if [ -n "$MISSING" ]; then
+            echo "::error::The following commits are missing DCO sign-off (re-run with 'git commit --amend -s --no-edit' or interactive rebase):"
+            echo "$MISSING"
+            exit 1
+          fi
+          echo "All commits signed off ✓"
+
+  locked-decision-guard:
+    name: Locked-decision touch guard
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect touches to locked invariants
+        run: |
+          set -e
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+          # paths that imply touching a locked invariant
+          PATTERNS='^(LICENSE|GOVERNANCE.md|docs/(NO_AI_IMAGERY|BILINGUAL).md|lib/trust/|lib/persona/|supabase/migrations/|.github/CODEOWNERS|.github/workflows/)'
+          CHANGED=$(git diff --name-only "$BASE..$HEAD")
+          MATCHED=$(echo "$CHANGED" | grep -E "$PATTERNS" || true)
+          if [ -n "$MATCHED" ]; then
+            echo "::warning::This PR touches paths governed by locked-invariant rules:"
+            echo "$MATCHED"
+            echo "::warning::Reviewer must verify owner approval is in place (see GOVERNANCE.md)."
+          else
+            echo "No locked-invariant paths touched."
+          fi

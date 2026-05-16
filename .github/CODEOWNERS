@@ -1,0 +1,23 @@
+# CODEOWNERS — default reviewers for paths in this repo
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+
+# Default: owner reviews everything unless a more-specific rule matches
+*                               @DungMai
+
+# Locked-decision areas — owner approval required
+LICENSE                         @DungMai
+GOVERNANCE.md                   @DungMai
+CODE_OF_CONDUCT.md              @DungMai
+SECURITY.md                     @DungMai
+/docs/NO_AI_IMAGERY.md          @DungMai
+/docs/BILINGUAL.md              @DungMai
+
+# Trust-critical code paths — owner approval required
+/lib/trust/                     @DungMai
+/lib/persona/                   @DungMai
+/supabase/migrations/           @DungMai
+/app/api/chat/                  @DungMai
+
+# CI workflows — owner approval required
+/.github/workflows/             @DungMai
+/.github/CODEOWNERS             @DungMai

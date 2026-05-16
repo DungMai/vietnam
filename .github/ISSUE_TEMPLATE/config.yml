@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: General questions / discussion
+    url: https://github.com/DungMai/vietnam/discussions
+    about: For questions, ideas, or open-ended discussion — use Discussions, not Issues.
+  - name: Security vulnerability
+    url: https://github.com/DungMai/vietnam/blob/main/SECURITY.md
+    about: DO NOT open a public issue. Email dung@newera.inc — see SECURITY.md.
+  - name: Become a fixer (paid local verifier)
+    url: mailto:dung@newera.inc?subject=Fixer%20application
+    about: Email the owner if you want to verify facts in your province monthly (paid).

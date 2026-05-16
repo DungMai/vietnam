@@ -1,0 +1,45 @@
+name: ✨ Feature request
+description: Suggest a new feature or enhancement
+labels: ["kind:feature", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a feature request, consider whether it might be better as a [Discussion](https://github.com/DungMai/vietnam/discussions) first. Feature requests that haven't been discussed often get closed.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      placeholder: "Travelers can't easily share a verified answer to a friend on TikTok / Reddit — they screenshot, which loses the citation."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      placeholder: "A 'Share' button on chat replies that generates a TikTok-friendly card with the citation embedded."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: invariants
+    attributes:
+      label: Does this proposal touch a locked invariant?
+      description: See [GOVERNANCE.md](../blob/main/GOVERNANCE.md). If any of these are checked, the issue will be re-labeled `locked-decision-touched` for owner discussion (14-day RFC window).
+      options:
+        - label: Affects AI-generated imagery policy
+        - label: Affects bilingual `*_en`/`*_vi` schema convention
+        - label: Affects "Sài Gòn" vs "TP.HCM" naming
+        - label: Affects fixer trust loop
+        - label: Adds / removes a province from V1 scope
+        - label: Affects license
+        - label: None of the above

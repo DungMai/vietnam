@@ -1,0 +1,74 @@
+name: ⚠️ Scam pattern report
+description: Report a scam pattern you encountered or observed in a province
+labels: ["kind:scam-report", "needs-fixer-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help travelers avoid this. A fixer will verify and add to the `scam_warning` table if confirmed.
+        **Giúp du khách tránh chiêu này. Fixer sẽ xác minh và thêm vào bảng cảnh báo nếu xác nhận.**
+
+  - type: dropdown
+    id: province
+    attributes:
+      label: Province / Tỉnh
+      options:
+        - hcm
+        - hanoi
+        - danang
+        - hue
+        - khanhhoa
+        - lamdong
+        - quangninh
+        - angiang
+        - haiphong
+        - cantho
+    validations:
+      required: true
+
+  - type: textarea
+    id: where
+    attributes:
+      label: Where exactly
+      description: Specific location — neighborhood, street, venue name. / Vị trí cụ thể — khu phố, đường, tên quán.
+      placeholder: "Tan Son Nhat (SGN) airport arrivals hall, unmarked taxi line outside Door 5"
+    validations:
+      required: true
+
+  - type: textarea
+    id: pattern
+    attributes:
+      label: The scam — what they said and did
+      description: Quote the scammer's verbal trigger if you can. / Trích đúng câu kẻ lừa nói nếu có thể.
+      placeholder: |
+        Driver said "meter is broken" and quoted a flat 700k VND.
+        Real metered fare is 250–300k.
+    validations:
+      required: true
+
+  - type: textarea
+    id: when
+    attributes:
+      label: When did this happen
+      placeholder: "April 2026 — still active when I left May 5"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity (your gut)
+      options:
+        - advisory — worth a heads-up
+        - alert — common, costs people money regularly
+        - red — physical safety risk or large financial loss
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence (optional)
+      description: Photo, receipt, witness count, etc. / Ảnh, hoá đơn, số nhân chứng...
+    validations:
+      required: false

@@ -1,0 +1,74 @@
+name: 📝 Fact correction
+description: You know a province well and we got a fact wrong
+labels: ["kind:fact-correction", "needs-fixer-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping. You don't need to write code — a fixer will update the DB after review.
+        **Cám ơn vì giúp đỡ. Bạn không cần viết code — một fixer sẽ cập nhật DB sau khi xem xét.**
+
+  - type: dropdown
+    id: province
+    attributes:
+      label: Province / Tỉnh
+      options:
+        - hcm (Sài Gòn / TP.HCM)
+        - hanoi (Hà Nội)
+        - danang (Đà Nẵng)
+        - hue (Huế)
+        - khanhhoa (Nha Trang / Khánh Hòa)
+        - lamdong (Đà Lạt / Lâm Đồng)
+        - quangninh (Hạ Long / Quảng Ninh)
+        - angiang (An Giang / Phú Quốc)
+        - haiphong (Hải Phòng)
+        - cantho (Cần Thơ)
+    validations:
+      required: true
+
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What we said (wrong)
+      description: Paste the chat output or screenshot URL. / Dán nội dung chat sai hoặc URL ảnh chụp.
+    validations:
+      required: true
+
+  - type: textarea
+    id: right
+    attributes:
+      label: What's right
+      description: Be specific. "Taxi from SGN to D1 is 280k VND on a Vinasun meter as of last month." / Cụ thể nhé. "Taxi từ SGN về Q1 là 280k VNĐ theo đồng hồ Vinasun tháng vừa rồi."
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Photo / receipt / dated source URL / your local experience (state when). / Ảnh / hoá đơn / link nguồn có ngày / kinh nghiệm cá nhân (nêu thời điểm).
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Fact category
+      options:
+        - price (giá)
+        - hours (giờ)
+        - location (địa điểm)
+        - scam_pattern (chiêu lừa)
+        - culture (văn hoá)
+        - history (lịch sử)
+        - logistics (di chuyển)
+        - other (khác)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contact
+    attributes:
+      label: Local contact
+      options:
+        - label: I'm willing to be contacted via the email on my GitHub profile if a fixer has follow-up questions. / Tôi sẵn sàng được liên hệ qua email GitHub nếu fixer có câu hỏi thêm.
