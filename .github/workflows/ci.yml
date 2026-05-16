@@ -28,6 +28,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      - run: pnpm ci:scan-assets
       - run: pnpm build
         env:
           # build needs these env vars to be defined; values do not need to be real for build
