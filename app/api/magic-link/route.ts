@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createHash, randomBytes } from 'node:crypto';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { sendEmail } from '@/lib/email/resend';
 import { magicLinkEmail } from '@/lib/email/templates/magic-link';
 import type { Locale } from '@/types/domain';
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
   const { email, sessionId, locale } = parsed.data;
 
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin();
 
   // Verify session exists (cookie binding check)
   const { data: session } = await supabase
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/?gate=invalid', origin));
   }
 
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin();
   const tokenHash = hashToken(token);
 
   const { data: attempt } = await supabase

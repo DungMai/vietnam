@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { checkExif } from '@/lib/asset/exif';
 import { checkPhash } from '@/lib/asset/phash';
 import { getOrCreateSession } from '@/lib/session/cookie';
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
   // === Checkpoint 2 — pHash (currently stub; see lib/asset/phash.ts) ===
   const phash = await checkPhash(buffer);
 
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin();
 
   // Compute initial state from checks
   const rejected = !exif.passed;

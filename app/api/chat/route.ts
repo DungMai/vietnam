@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getOrCreateSession, incrementDailyMessage, RateLimitExceeded } from '@/lib/session/cookie';
 import { retrieveTopK, retrievalConfidence } from '@/lib/rag/retrieve';
 import { buildSystemPrompt } from '@/lib/persona/prompt';
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     throw e;
   }
 
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin();
   const { data: province } = await supabase
     .from('province')
     .select('id, slug')

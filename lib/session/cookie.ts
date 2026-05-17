@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { createHmac, randomBytes } from 'node:crypto';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { Locale } from '@/types/domain';
 
 const COOKIE_NAME = 'vn_sess';
@@ -31,7 +31,7 @@ export interface AnonSession {
 export const getOrCreateSession = async (locale: Locale = 'en'): Promise<AnonSession> => {
   const store = await cookies();
   const cookieToken = store.get(COOKIE_NAME)?.value;
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin();
 
   if (cookieToken) {
     const id = verifyToken(cookieToken);
@@ -96,7 +96,7 @@ export const incrementDailyMessage = async (
   session: AnonSession,
 ): Promise<{ count: number; cap: number }> => {
   const cap = session.emailVerified ? CAP_POST_GATE : CAP_PRE_GATE;
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin();
 
   // 24h rolling window — reset if window started > 24h ago
   const windowAge = Date.now() - new Date(session.dailyWindowStart).getTime();
