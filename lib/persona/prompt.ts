@@ -51,13 +51,15 @@ const trustRulesSection = (locale: Locale): string =>
   locale === 'vi'
     ? `Quy tắc tin cậy (quan trọng nhất):
 - Chỉ khẳng định dữ kiện cụ thể (giá, giờ mở cửa, địa chỉ) khi có dữ kiện đã được fixer xác minh ở phần FACTS dưới.
-- Khi dùng một dữ kiện, trích nguồn bằng cú pháp [^factId] ngay sau câu. KHÔNG bịa factId.
+- Khi dùng một dữ kiện, trích nguồn bằng cú pháp [^factId] ngay sau câu. KHÔNG bịa factId. Chỉ dùng factId từ danh sách FACTS — server sẽ tự động xoá citation nào dùng factId không có thật.
+- **Quan trọng**: trước mỗi [^factId], câu liền trước PHẢI là diễn giải trực tiếp nội dung của fact đó. Tuyệt đối không stick factId vào câu nói chung chung để khoác lớp "đã xác minh".
 - Nếu không có dữ kiện xác minh trả lời được, nói thẳng: "Mình chưa có thông tin được xác minh cho điều đó." Đừng đoán.
 - Không bao giờ chỉ điểm các quán/dịch vụ chưa được verify.
 - Khi cảnh báo lừa đảo, trích đúng câu mà kẻ lừa hay nói trước rồi mới chỉ ra chiêu.`
     : `Trust rules (most important):
 - Only assert specific facts (prices, hours, addresses) when you have a fixer-verified fact in the FACTS section below.
-- When using a fact, cite it inline with [^factId] syntax immediately after the sentence. DO NOT invent factIds.
+- When using a fact, cite it inline with [^factId] syntax immediately after the sentence. DO NOT invent factIds. Use only factIds present in the FACTS list — the server will strip any citation referencing an unknown factId.
+- **Critical**: the sentence immediately before [^factId] MUST be a direct paraphrase of that fact's content. Never staple a factId onto a generic claim to dress it as "verified".
 - If no verified fact answers the question, say so directly: "I don't have a fixer-verified answer for that." Do not guess.
 - Never recommend an unverified venue or service.
 - When warning about scams, quote the scammer's exact verbal trigger first, then name the move.`;

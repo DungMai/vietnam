@@ -18,6 +18,7 @@ interface Props {
 export const ChatSurface = ({ provinceSlug, personaName, accentColor, locale }: Props) => {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [citations, setCitations] = useState<Record<string, CitationPayload>>({});
+  const [allowedFactIds, setAllowedFactIds] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +94,21 @@ export const ChatSurface = ({ provinceSlug, personaName, accentColor, locale }: 
     } else if (event === 'citation') {
       const c = data as CitationPayload;
       setCitations((prev) => ({ ...prev, [c.factId]: c }));
+    } else if (event === 'citation_set') {
+      const { allowedFactIds: ids } = data as { allowedFactIds: string[] };
+      setAllowedFactIds(new Set(ids));
+    } else if (event === 'citation_violation') {
+      // Server detected the LLM emitted unknown factIds — defensively strip
+      // them from the local map so any rendered pill disappears.
+      const { unknownFactIds } = data as { unknownFactIds: string[] };
+      if (unknownFactIds.length > 0) {
+        console.warn('[chat] citation_violation', unknownFactIds);
+        setCitations((prev) => {
+          const next = { ...prev };
+          for (const id of unknownFactIds) delete next[id];
+          return next;
+        });
+      }
     } else if (event === 'error') {
       setError((data as { message: string }).message);
     }
@@ -110,7 +126,13 @@ export const ChatSurface = ({ provinceSlug, personaName, accentColor, locale }: 
         )}
         {messages.map((m) => (
           <ChatBubble key={m.id} role={m.role} accentColor={m.role === 'agent' ? accentColor : undefined}>
-            <RenderWithCitations text={m.text} citations={citations} locale={locale} onCite={setOpenCitation} />
+            <RenderWithCitations
+              text={m.text}
+              citations={citations}
+              allowedFactIds={allowedFactIds}
+              locale={locale}
+              onCite={setOpenCitation}
+            />
           </ChatBubble>
         ))}
         {error && (
@@ -167,11 +189,13 @@ const CITATION_RE = /\[\^([a-zA-Z0-9-]+)\]/g;
 const RenderWithCitations = ({
   text,
   citations,
+  allowedFactIds,
   locale,
   onCite,
 }: {
   text: string;
   citations: Record<string, CitationPayload>;
+  allowedFactIds: Set<string>;
   locale: Locale;
   onCite: (c: CitationPayload) => void;
 }) => {
@@ -182,14 +206,18 @@ const RenderWithCitations = ({
   while ((m = CITATION_RE.exec(text)) !== null) {
     if (m.index > lastIdx) parts.push(<span key={`t${lastIdx}`}>{text.slice(lastIdx, m.index)}</span>);
     const factId = m[1];
+    // Two defensive gates: factId must be in the allowed set the server
+    // emitted AND must have a citation payload. See SECURITY-AUDIT CRITICAL #2.
     const c = citations[factId];
-    if (c) {
+    if (c && allowedFactIds.has(factId)) {
       parts.push(
         <span key={`c${m.index}`} onClick={() => onCite(c)} className="cursor-pointer">
           <CitationPill citation={c} locale={locale} />
         </span>,
       );
     }
+    // Unknown / stripped factIds: the `[^xxx]` token is consumed but nothing
+    // renders — preserves text flow without surfacing the hallucinated marker.
     lastIdx = m.index + m[0].length;
   }
   if (lastIdx < text.length) parts.push(<span key={`t${lastIdx}`}>{text.slice(lastIdx)}</span>);
