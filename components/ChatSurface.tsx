@@ -142,11 +142,7 @@ export const ChatSurface = ({ provinceSlug, personaName, accentColor, locale }: 
         )}
         {gated && (
           <ChatBubble role="system">
-            <a href="?gate=email" className="underline">
-              {locale === 'vi'
-                ? 'Bạn đã đạt giới hạn miễn phí. Nhập email để tiếp tục.'
-                : 'You\'ve hit the free limit. Enter your email to continue.'}
-            </a>
+            <EmailGateForm locale={locale} />
           </ChatBubble>
         )}
       </div>
@@ -180,6 +176,92 @@ export const ChatSurface = ({ provinceSlug, personaName, accentColor, locale }: 
         <CitationModal citation={openCitation} locale={locale} onClose={() => setOpenCitation(null)} />
       )}
     </div>
+  );
+};
+
+// Inline email-gate form rendered when the chat returns 429.
+// POSTs to /api/magic-link with { email, locale }; sessionId is read server-side
+// from the signed cookie (never sent from the client).
+const EmailGateForm = ({ locale }: { locale: Locale }) => {
+  const [email, setEmail] = useState('');
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || state === 'sending') return;
+    setState('sending');
+    setErr(null);
+    try {
+      const res = await fetch('/api/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, locale }),
+      });
+      if (res.status === 429) {
+        setErr(locale === 'vi' ? 'Bạn gửi quá nhanh. Thử lại sau 1 giờ.' : 'Too many requests. Try again in an hour.');
+        setState('error');
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setErr((body as { error?: string }).error ?? `HTTP ${res.status}`);
+        setState('error');
+        return;
+      }
+      setState('sent');
+    } catch (e2) {
+      setErr(e2 instanceof Error ? e2.message : String(e2));
+      setState('error');
+    }
+  };
+
+  if (state === 'sent') {
+    return (
+      <div className="space-y-2">
+        <p>
+          {locale === 'vi'
+            ? `Đã gửi link tới ${email}. Mở email trong 15 phút tới để tiếp tục.`
+            : `Sent a link to ${email}. Open it within 15 minutes to continue.`}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-2">
+      <p>
+        {locale === 'vi'
+          ? 'Bạn đã đạt giới hạn miễn phí trong ngày. Nhập email để mở thêm tin nhắn (link 1 lần, hết hạn sau 15 phút).'
+          : 'You\'ve hit the daily free limit. Enter your email to unlock more messages (single-use link, expires in 15 minutes).'}
+      </p>
+      <div className="flex gap-2">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={locale === 'vi' ? 'email@cua.ban' : 'you@example.com'}
+          disabled={state === 'sending'}
+          className="flex-1 rounded-md border border-ink-secondary/15 bg-surface-base px-3 py-2 text-body-sm focus:border-ink-primary focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={!email || state === 'sending'}
+          className="rounded-md bg-ink-primary px-4 py-2 text-body-sm text-surface-base disabled:opacity-40"
+        >
+          {state === 'sending'
+            ? locale === 'vi' ? 'Đang gửi...' : 'Sending...'
+            : locale === 'vi' ? 'Gửi link' : 'Send link'}
+        </button>
+      </div>
+      {err && <p className="text-caption text-feedback-error">{err}</p>}
+      <p className="text-caption text-ink-secondary">
+        {locale === 'vi'
+          ? 'Email chỉ dùng để gửi link. Chúng tôi không tạo tài khoản, không spam.'
+          : 'Email is only used to send the link. No account creation, no spam.'}
+      </p>
+    </form>
   );
 };
 
