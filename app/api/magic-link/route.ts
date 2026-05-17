@@ -1,18 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createHash, randomBytes } from 'node:crypto';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { sendEmail } from '@/lib/email/resend';
 import { magicLinkEmail } from '@/lib/email/templates/magic-link';
-import type { Locale } from '@/types/domain';
+import { getOrCreateSession } from '@/lib/session/cookie';
 
 export const runtime = 'nodejs';
 
 const TOKEN_TTL_MINUTES = 15;
 
+// sessionId is read from the signed cookie server-side — never accepted from
+// the client body. Eliminates a CSRF-style "issue link for any session" attack.
 const IssueSchema = z.object({
   email: z.string().email(),
-  sessionId: z.string().uuid(),
   locale: z.enum(['en', 'vi']),
 });
 
@@ -33,19 +34,13 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid payload' }, { status: 400 });
   }
-  const { email, sessionId, locale } = parsed.data;
+  const { email, locale } = parsed.data;
 
-  const supabase = await supabaseServer();
+  // sessionId comes from the signed cookie, not from the request body.
+  const session = await getOrCreateSession(locale);
+  const sessionId = session.id;
 
-  // Verify session exists (cookie binding check)
-  const { data: session } = await supabase
-    .from('anonymous_session')
-    .select('id')
-    .eq('id', sessionId)
-    .maybeSingle();
-  if (!session) {
-    return NextResponse.json({ error: 'session not found' }, { status: 404 });
-  }
+  const supabase = supabaseAdmin();
 
   // Issue throttle — max 3 pending magic links per email per hour (abuse guard).
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -114,7 +109,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/?gate=invalid', origin));
   }
 
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin();
   const tokenHash = hashToken(token);
 
   const { data: attempt } = await supabase

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { prescreenReport, stateFromScore } from '@/lib/moderation/prescreen';
 
 export const runtime = 'nodejs';
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'invalid payload', issues: parsed.error.issues }, { status: 400 });
   }
 
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin();
 
   // Insert in submitted state first — preserve evidence even if AI call fails.
   const { data: created, error: insertErr } = await supabase

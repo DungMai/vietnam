@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getOrCreateSession, incrementDailyMessage, RateLimitExceeded } from '@/lib/session/cookie';
 import { retrieveTopK, retrievalConfidence } from '@/lib/rag/retrieve';
 import { buildSystemPrompt } from '@/lib/persona/prompt';
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     throw e;
   }
 
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin();
   const { data: province } = await supabase
     .from('province')
     .select('id, slug')
@@ -89,12 +89,21 @@ export async function POST(req: NextRequest) {
         for (const f of facts ?? []) {
           const sig = Array.isArray(f.fixer_signature) ? f.fixer_signature[0] : f.fixer_signature;
           const fixer = Array.isArray(sig?.fixer) ? sig.fixer[0] : sig?.fixer;
+          const isStale = f.expires_at ? new Date(f.expires_at).getTime() < Date.now() : false;
+          // tier derivation: fixer-signed + fresh = verified_local; fixer-signed + stale = recent_source;
+          // no signature = ai_inferred (not yet emitted by this route — reserved for future cultural-essay flow)
+          const tier = fixer
+            ? isStale
+              ? 'recent_source'
+              : 'verified_local'
+            : 'ai_inferred';
           send('citation', {
             factId: f.id,
             body: locale === 'vi' ? f.body_vi : f.body_en,
             category: f.category,
+            tier,
             verifiedAt: f.verified_at,
-            isStale: f.expires_at ? new Date(f.expires_at).getTime() < Date.now() : false,
+            isStale,
             sourceUrl: f.source_url,
             fixer: fixer
               ? { handle: fixer.handle, fullName: fixer.full_name, signedAt: sig?.signed_at }
@@ -103,14 +112,47 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Whitelist of factIds the model is allowed to cite — anything else
+      // emitted as [^xxx] is a hallucination and gets stripped server-side.
+      // See SECURITY-AUDIT.md CRITICAL #2.
+      const allowedFactIds = new Set(factIds);
+      send('citation_set', { allowedFactIds: Array.from(allowedFactIds) });
+
       try {
         const result = streamChat({ tier, system, prompt: message });
+        let accumulated = '';
         for await (const delta of result.textStream) {
+          accumulated += delta;
           send('token', { delta });
         }
 
         const final = await result.text;
         const usage = await result.usage;
+
+        // Server-side citation post-filter — hallucination guard.
+        // Scans the assembled response for [^xxx] markers and rejects any
+        // factId not in the retrieved set. Client also defensively filters,
+        // but this is the binding gate: every cited factId is logged for audit
+        // and unknown ones are emitted as a violation event so the client can
+        // strip retroactively (e.g. dim or remove the pill).
+        const CITATION_RE = /\[\^([a-zA-Z0-9-]+)\]/g;
+        const seen = new Set<string>();
+        const unknown = new Set<string>();
+        let m: RegExpExecArray | null;
+        while ((m = CITATION_RE.exec(accumulated)) !== null) {
+          const fid = m[1];
+          seen.add(fid);
+          if (!allowedFactIds.has(fid)) unknown.add(fid);
+        }
+        if (unknown.size > 0) {
+          console.warn('[chat.citation_violation]', {
+            sessionId: session.id,
+            provinceSlug,
+            tier,
+            unknownFactIds: Array.from(unknown),
+          });
+          send('citation_violation', { unknownFactIds: Array.from(unknown) });
+        }
 
         // log cost for monitoring (03-DECISIONS/0003-llm-cost-monitoring.md)
         await supabase.from('llm_call_log').insert({
@@ -124,7 +166,7 @@ export async function POST(req: NextRequest) {
           // cost computed offline by daily rollup; left at 0 here
         });
 
-        send('done', { finalLength: final.length });
+        send('done', { finalLength: final.length, citedFactIds: Array.from(seen), unknownCount: unknown.size });
       } catch (e) {
         send('error', { message: e instanceof Error ? e.message : String(e) });
       } finally {
