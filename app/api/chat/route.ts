@@ -89,12 +89,21 @@ export async function POST(req: NextRequest) {
         for (const f of facts ?? []) {
           const sig = Array.isArray(f.fixer_signature) ? f.fixer_signature[0] : f.fixer_signature;
           const fixer = Array.isArray(sig?.fixer) ? sig.fixer[0] : sig?.fixer;
+          const isStale = f.expires_at ? new Date(f.expires_at).getTime() < Date.now() : false;
+          // tier derivation: fixer-signed + fresh = verified_local; fixer-signed + stale = recent_source;
+          // no signature = ai_inferred (not yet emitted by this route — reserved for future cultural-essay flow)
+          const tier = fixer
+            ? isStale
+              ? 'recent_source'
+              : 'verified_local'
+            : 'ai_inferred';
           send('citation', {
             factId: f.id,
             body: locale === 'vi' ? f.body_vi : f.body_en,
             category: f.category,
+            tier,
             verifiedAt: f.verified_at,
-            isStale: f.expires_at ? new Date(f.expires_at).getTime() < Date.now() : false,
+            isStale,
             sourceUrl: f.source_url,
             fixer: fixer
               ? { handle: fixer.handle, fullName: fixer.full_name, signedAt: sig?.signed_at }

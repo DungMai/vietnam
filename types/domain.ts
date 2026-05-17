@@ -62,6 +62,18 @@ export interface ScamWarning {
 }
 
 /**
+ * Citation tier — surfaced to the user via different visual treatments.
+ * See 01-PRD.md §7.2 four trust primitives + docs/ANTI_SCAM_LOOP.md.
+ *
+ * - verified_local: fixer-signed AND verified within 30 days. Forest-green pill.
+ * - recent_source:  fixer-signed but verified > 30 days ago (stale). Amber pill.
+ * - ai_inferred:    no fixer signature; AI-summarized from a public source.
+ *                   Currently not produced by the pipeline — reserved for a
+ *                   future cultural-essay feature. UI is grey/dashed pill.
+ */
+export type CitationTier = 'verified_local' | 'recent_source' | 'ai_inferred';
+
+/**
  * Citation payload streamed over SSE alongside chat tokens.
  * See 02-SPECS/trust-citation-rendering.md §payload contract.
  */
@@ -69,8 +81,9 @@ export interface CitationPayload {
   factId: string;
   body: string;
   category: FactCategory;
-  fixer: { handle: string; fullName: string; signedAt: string };
-  verifiedAt: string;
+  tier: CitationTier;
+  fixer?: { handle: string; fullName: string; signedAt: string };
+  verifiedAt?: string;
   isStale: boolean;
   sourceUrl?: string;
 }
