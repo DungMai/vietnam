@@ -6,7 +6,34 @@ import type { Locale } from '@/types/domain';
 const COOKIE_NAME = 'vn_sess';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 180; // 180 days
 
-const hmacSecret = () => process.env.SHARE_CARD_HMAC_SECRET ?? 'dev-only-secret';
+/**
+ * Session-cookie HMAC. Separate from SHARE_CARD_HMAC_SECRET — cross-purpose
+ * HMAC reuse is a documented weakness (SECURITY-AUDIT MEDIUM #?).
+ *
+ * Fail-closed in production: a missing secret throws. In development we
+ * accept a hardcoded fallback but warn loudly so it cannot be missed.
+ * See SECURITY-AUDIT.md HIGH #4 (Stage 5 harden) — the previous silent
+ * fallback would have produced forgeable session tokens in production
+ * if the env var was misconfigured.
+ */
+let _warnedDevSecret = false;
+const hmacSecret = (): string => {
+  const fromEnv = process.env.SESSION_HMAC_SECRET;
+  if (fromEnv && fromEnv.length >= 32) return fromEnv;
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'SESSION_HMAC_SECRET must be set to a value >= 32 chars in production. Refusing to fall back to a hardcoded dev secret (SECURITY-AUDIT HIGH #4).',
+    );
+  }
+  if (!_warnedDevSecret) {
+    console.warn(
+      '[session] SESSION_HMAC_SECRET not set or too short — using dev-only fallback. DO NOT deploy without setting this.',
+    );
+    _warnedDevSecret = true;
+  }
+  return 'dev-only-do-not-use-in-production-do-not-use-in-production';
+};
 const sign = (id: string) => createHmac('sha256', hmacSecret()).update(id).digest('hex');
 const tokenFor = (id: string) => `${id}.${sign(id)}`;
 const verifyToken = (token: string): string | null => {
